@@ -12,5 +12,6 @@ LICENSE
 .all-contributorsrc
 .gitignore
 Makefile
+.arduino-ci.yml
 ^other/*
 ^docs/Menus.xlsx$

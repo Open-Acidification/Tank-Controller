@@ -1,25 +1,41 @@
+platforms:
+  mega2560:
+    board: arduino:avr:mega:cpu=atmega2560
+    package: arduino:avr
+    gcc:
+      features:
+      defines:
+        - __AVR__
+        - __AVR_ATmega2560__
+        - ARDUINO_ARCH_AVR
+        - ARDUINO_AVR_MEGA2560
+      warnings:
+        - no-unknown-attributes
+        - no-address-of-packed-member
+      flags:
+
 unittest:
-    platforms:
-        - mega2560
-    libraries:
-      - "Adafruit BusIO"
-      - "Adafruit MAX31865"
-      - "Arduino-PID-Library"
-      - "Ethernet"
-      - "LiquidCrystal"
-      - "RTClib"
-      - "Keypad"
-      - "SD"
+  platforms:
+    - mega2560
+  libraries:
+    - "Adafruit BusIO"
+    - "Adafruit MAX31865"
+    - "Arduino-PID-Library"
+    - "Ethernet"
+    - "LiquidCrystal"
+    - "RTClib"
+    - "Keypad"
+    - "SD"
 
 compile:
-    platforms:
-      - mega2560
-    libraries:
-      - "Adafruit BusIO"
-      - "Adafruit MAX31865"
-      - "Arduino-PID-Library"
-      - "Ethernet"
-      - "LiquidCrystal"
-      - "RTClib"
-      - "Keypad"
-      - "SD"
+  platforms:
+    - mega2560
+  libraries:
+    - "Adafruit BusIO"
+    - "Adafruit MAX31865"
+    - "Arduino-PID-Library"
+    - "Ethernet"
+    - "LiquidCrystal"
+    - "RTClib"
+    - "Keypad"
+    - "SD"
