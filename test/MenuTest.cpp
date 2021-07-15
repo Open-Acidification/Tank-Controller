@@ -39,7 +39,7 @@ unittest_teardown() {
 
 unittest(MainMenu) {
   assertEqual("pH=0.000   8.100", lc->getLines().at(0));
-  assertEqual("T=12.23 H 15.75 ", lc->getLines().at(1));
+  assertEqual("T=12.23 h 15.75 ", lc->getLines().at(1));
   delay(1000);
   tc->loop();
   assertEqual("pH 0.000   8.100", lc->getLines().at(0));

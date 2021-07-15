@@ -230,8 +230,13 @@ void MainMenu::idle() {
   } else if (99.99 < temp) {
     temp = 99.99;
   }
-  snprintf(output, sizeof(output), "T%c%5.2f %c %5.2f", equals, temp, (tempControl->isHeater() ? 'H' : 'C'),
-           tempControl->getTargetTemperature());
+  char status = tempControl->isHeater() ? 'h' : 'c';
+  if (tempControl->isOn()) {
+    status = toupper(status);
+    // status -= 'a' - 'A';  // convert to uppercase
+  }
+
+  snprintf(output, sizeof(output), "T%c%5.2f %c %5.2f", equals, temp, status, tempControl->getTargetTemperature());
   LiquidCrystal_TC::instance()->writeLine(output, 1);
 }
 

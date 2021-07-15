@@ -56,7 +56,7 @@ void Serial_TC::vprintf(const char *format, va_list args) {
   }
 #ifdef MOCK_PINS_COUNT
 #if DEBUG
-  // std::cout << "\tSERIAL: " << buffer << std::endl;
+  std::cout << "\tSERIAL: " << buffer << std::endl;
 #endif
 #endif
 }

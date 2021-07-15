@@ -42,15 +42,16 @@ void TemperatureControl::enableHeater(bool flag) {
  * protected constructor
  */
 TemperatureControl::TemperatureControl() {
+  COUT("TemperatureControl()");
   targetTemperature = EEPROM_TC::instance()->getTemp();
   if (isnan(targetTemperature)) {
     targetTemperature = DEFAULT_TEMPERATURE;
     EEPROM_TC::instance()->setTemp(targetTemperature);
   }
   pinMode(TEMP_CONTROL_PIN, OUTPUT);
-  pinValue = TURN_SOLENOID_OFF;
-  digitalWrite(TEMP_CONTROL_PIN, pinValue);
-  serial("%s with target temperature of %5.2f C", this->isHeater() ? "Heater" : "Chiller", targetTemperature);
+  digitalWrite(TEMP_CONTROL_PIN, TURN_SOLENOID_OFF);
+  serial("%s starts with solenoid off with target temperature of %5.2f C", this->isHeater() ? "Heater" : "Chiller",
+         targetTemperature);
 }
 
 /**
@@ -58,6 +59,10 @@ TemperatureControl::TemperatureControl() {
  */
 bool TemperatureControl::isHeater() {
   return true;
+}
+
+bool TemperatureControl::isOn() {
+  return digitalRead(TEMP_CONTROL_PIN) == TURN_SOLENOID_ON;
 }
 
 /**
@@ -73,35 +78,48 @@ void TemperatureControl::setTargetTemperature(float newTemperature) {
 
 void Chiller::updateControl(float currentTemperature) {
   uint32_t currentMillis = millis();
+  COUT("Chiller::updateControl(" << currentTemperature << ") at " << currentMillis);
+  if (currentMillis < previousMillis) {
+    COUT("Reset previousMillis from " << previousMillis << " to 0");
+    previousMillis = 0;  // reset if clock went backwards (typical during tests)
+  }
   // pause 30 seconds between switching chiller on and off to prevent damage to chiller
-  if (currentMillis - previousMillis >= TIME_INTERVAL) {
-    bool newValue = pinValue;
+  if (currentMillis - previousMillis < TIME_INTERVAL) {
+    COUT("Chiller update at " << currentMillis << " ignored due to update at " << previousMillis);
+  } else {
+    bool oldValue = digitalRead(TEMP_CONTROL_PIN);
+    bool newValue;
     previousMillis = currentMillis;
     // if in calibration, turn unit off
     if (TankControllerLib::instance()->isInCalibration()) {
       newValue = TURN_SOLENOID_OFF;
+      COUT("Chiller should be off");
     }
     // if the observed temperature is above the set-point range turn on the chiller
     else if (currentTemperature >= targetTemperature + DELTA) {
       newValue = TURN_SOLENOID_ON;
+      COUT("Chiller should be on");
     }
     // if the observed temperature is below the set-point range turn off the chiller
     else if (currentTemperature <= targetTemperature - DELTA) {
       newValue = TURN_SOLENOID_OFF;
+      COUT("Chiller should be off");
+    } else {
+      newValue = oldValue;
     }
-    if (newValue != pinValue) {
-      pinValue = newValue;
-      DateTime_TC::now().printToSerial();
+    if (newValue != oldValue) {
       uint32_t currentMS = millis();
-      serial("chiller turned %s after %lu ms", pinValue ? "off" : "on", currentMS - lastSwitchMS);
+      serial("chiller turned %s at %lu after %lu ms", newValue ? "off" : "on", currentMS, currentMS - lastSwitchMS);
       lastSwitchMS = currentMS;
-      digitalWrite(TEMP_CONTROL_PIN, pinValue);
+      digitalWrite(TEMP_CONTROL_PIN, newValue);
     }
   }
 }
 
 void Heater::updateControl(float currentTemperature) {
-  bool newValue = pinValue;
+  COUT("Heater::updateControl(" << currentTemperature);
+  bool oldValue = digitalRead(TEMP_CONTROL_PIN);
+  bool newValue;
   // if in calibration, turn unit off
   if (TankControllerLib::instance()->isInCalibration()) {
     newValue = TURN_SOLENOID_OFF;
@@ -113,13 +131,14 @@ void Heater::updateControl(float currentTemperature) {
   // if the observed temperature is above the temperature set-point range turn off the heater
   else if (currentTemperature >= targetTemperature + DELTA) {
     newValue = TURN_SOLENOID_OFF;
+  } else {
+    newValue = oldValue;
+    COUT("Heater update at " << millis() << " ignored due to recent change in state");
   }
-  if (newValue != pinValue) {
-    pinValue = newValue;
-    DateTime_TC::now().printToSerial();
+  if (newValue != oldValue) {
     uint32_t currentMS = millis();
-    serial("heater turned %s after %lu ms", pinValue ? "off" : "on", currentMS - lastSwitchMS);
+    serial("heater turned %s at %lu after %lu ms", newValue ? "off" : "on", currentMS, currentMS - lastSwitchMS);
     lastSwitchMS = currentMS;
-    digitalWrite(TEMP_CONTROL_PIN, pinValue);
+    digitalWrite(TEMP_CONTROL_PIN, newValue);
   }
 }

@@ -134,6 +134,7 @@ testfile
 timeinfo
 Tmp
 TODO
+toupper
 typedef
 uint
 undef
